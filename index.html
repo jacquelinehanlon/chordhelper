@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Guitar Chord Helper</title>
+
+<style>
+:root{
+    --bg:#1e1e1e;
+    --panel:#2b2b2b;
+    --panel2:#333;
+    --text:#fff;
+    --accent:#3fa9ff;
+    --border:#555;
+}
+
+*{
+    box-sizing:border-box;
+}
+
+body{
+    margin:0;
+    font-family:Segoe UI,sans-serif;
+    background:var(--bg);
+    color:var(--text);
+}
+
+header{
+    padding:15px;
+    font-size:24px;
+    font-weight:bold;
+    border-bottom:1px solid var(--border);
+}
+
+.controls{
+    display:flex;
+    gap:20px;
+    align-items:center;
+    padding:10px 15px;
+    flex-wrap:wrap;
+}
+
+button{
+    cursor:pointer;
+}
+
+#fretboard-container{
+    overflow:auto;
+    padding:10px;
+}
+
+#fretboard{
+    position:relative;
+    width:1500px;
+    height:340px;
+    background:#b07a44;
+    border:8px solid #75502d;
+    border-radius:12px;
+    margin:auto;
+    user-select:none;
+}
+
+.string{
+    position:absolute;
+    left:0;
+    right:0;
+    height:2px;
+    background:#ddd;
+}
+
+.fret{
+    position:absolute;
+    top:0;
+    bottom:0;
+    width:3px;
+    background:#ddd;
+}
+
+.fret-marker{
+    position:absolute;
+    width:18px;
+    height:18px;
+    background:rgba(255,255,255,.25);
+    border-radius:50%;
+}
+
+.note-cell{
+    position:absolute;
+    width:46px;
+    height:40px;
+    transform:translate(-50%,-50%);
+    border-radius:50%;
+    cursor:pointer;
+    transition:.1s;
+}
+
+.note-cell:hover{
+    box-shadow:0 0 0 2px rgba(255,255,255,.5);
+}
+
+.note-cell.selected{
+    background:var(--accent);
+    border:3px solid white;
+}
+
+.note-label{
+    position:absolute;
+    inset:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    pointer-events:none;
+    font-size:13px;
+    font-weight:bold;
+}
+
+.section{
+    padding:10px;
+}
+
+.section h2{
+    margin:0 0 8px 0;
+    font-size:18px;
+}
+
+.scroll-row{
+    overflow-x:auto;
+    white-space:nowrap;
+    border:1px solid var(--border);
+    background:var(--panel);
+    padding:6px;
+    border-radius:8px;
+}
+
+.chord-card{
+    display:inline-block;
+    margin-right:6px;
+    min-width:110px;
+    padding:8px;
+    background:var(--panel2);
+    color:white;
+    border:1px solid #666;
+    border-radius:6px;
+}
+
+.chord-card:hover{
+    background:#4a4a4a;
+}
+
+.footer{
+    padding:15px;
+    color:#aaa;
+    font-size:13px;
+}
+
+@media(max-width:700px){
+    header{
+        font-size:18px;
+    }
+}
+</style>
+</head>
+<body>
+
+<header id="header">
+Select notes
+</header>
+
+<div class="controls">
+    <button id="clearBtn">Clear Selection</button>
+
+    <label>
+        <input type="checkbox" id="showNames" checked>
+        Show Note Names
+    </label>
+</div>
+
+<div id="fretboard-container">
+    <div id="fretboard"></div>
+</div>
+
+<div class="section">
+    <h2>Nearby Chords</h2>
+    <div id="nearbyRow" class="scroll-row"></div>
+</div>
+
+<div class="section">
+    <h2>Nearby Inverted Chords</h2>
+    <div id="inversionRow" class="scroll-row"></div>
+</div>
+
+<div class="footer">
+Standalone Guitar Chord Helper
+</div>
+
+<script>
+
+const NOTE_NAMES=[
+"C","C#","D","D#","E","F",
+"F#","G","G#","A","A#","B"
+];
+
+const OPEN_STRINGS=[
+40,
+45,
+50,
+55,
+59,
+64
+];
+
+const CHORD_TYPES={
+"": [0,4,7],
+"m":[0,3,7],
+"dim":[0,3,6],
+"aug":[0,4,8],
+"sus2":[0,2,7],
+"sus4":[0,5,7],
+"6":[0,4,7,9],
+"m6":[0,3,7,9],
+"7":[0,4,7,10],
+"maj7":[0,4,7,11],
+"m7":[0,3,7,10],
+"m7b5":[0,3,6,10],
+"dim7":[0,3,6,9],
+"add9":[0,2,4,7],
+"madd9":[0,2,3,7],
+"9":[0,4,7,10,14],
+"maj9":[0,4,7,11,14],
+"m9":[0,3,7,10,14],
+"11":[0,4,7,10,14,17],
+"13":[0,4,7,10,14,21]
+};
+
+const ALL=[];
+
+for(let root=0;root<12;root++){
+
+    for(const [suffix,intervals] of Object.entries(CHORD_TYPES)){
+
+        ALL.push({
+            root,
+            intervals,
+            name:NOTE_NAMES[root]+suffix,
+            pcs:new Set(intervals.map(i=>(root+i)%12))
+        });
+
+    }
+}
+
+const fretboard=document.getElementById("fretboard");
+
+const selected=new Set();
+
+const noteElements=new Map();
+const noteData=new Map();
+
+const FRETS=15;
+const width=1500;
+const height=340;
+
+function buildFretboard(){
+
+    fretboard.innerHTML="";
+
+    for(let s=0;s<6;s++){
+
+        const y=40+s*52;
+
+        const string=document.createElement("div");
+
+        string.className="string";
+
+        string.style.top=y+"px";
+
+        fretboard.appendChild(string);
+    }
+
+    const fretSpacing=(width-80)/(FRETS+1);
+
+    for(let f=0;f<=FRETS;f++){
+
+        const x=40+f*fretSpacing;
+
+        const div=document.createElement("div");
+
+        div.className="fret";
+
+        div.style.left=x+"px";
+
+        fretboard.appendChild(div);
+    }
+
+    [3,5,7,9,15].forEach(f=>{
+
+        const marker=document.createElement("div");
+
+        marker.className="fret-marker";
+
+        marker.style.left=(40+(f-.5)*fretSpacing-9)+"px";
+        marker.style.top="160px";
+
+        fretboard.appendChild(marker);
+
+    });
+
+    const double=document.createElement("div");
+    double.className="fret-marker";
+    double.style.left=(40+(12-.5)*fretSpacing-9)+"px";
+    double.style.top="110px";
+
+    fretboard.appendChild(double);
+
+    const double2=document.createElement("div");
+    double2.className="fret-marker";
+    double2.style.left=(40+(12-.5)*fretSpacing-9)+"px";
+    double2.style.top="210px";
+
+    fretboard.appendChild(double2);
+
+    for(let string=0;string<6;string++){
+
+        const y=40+string*52;
+
+        for(let fret=0;fret<=FRETS;fret++){
+
+            const x=40+fret*fretSpacing-fretSpacing/2;
+
+            const midi=OPEN_STRINGS[5-string]+fret;
+
+            const key=`${string}-${fret}`;
+
+            const div=document.createElement("div");
+
+            div.className="note-cell";
+
+            div.style.left=x+"px";
+
+            div.style.top=y+"px";
+
+            const label=document.createElement("div");
+
+            label.className="note-label";
+
+            label.textContent=
+                NOTE_NAMES[midi%12];
+
+            div.appendChild(label);
+
+            div.addEventListener("click",()=>{
+
+                if(selected.has(midi)){
+                    selected.delete(midi);
+                }
+                else{
+                    selected.add(midi);
+                }
+
+                refresh();
+
+                playCurrentSelection();
+            });
+
+            fretboard.appendChild(div);
+
+            noteElements.set(midi,div);
+
+            noteData.set(midi,{
+                midi,
+                string,
+                fret
+            });
+        }
+    }
+}
+
+function selectedPCs(){
+
+    return new Set(
+        [...selected].map(n=>n%12)
+    );
+}
+
+function equalSets(a,b){
+
+    if(a.size!==b.size)return false;
+
+    for(const v of a){
+        if(!b.has(v)) return false;
+    }
+
+    return true;
+}
+
+function exactMatches(){
+
+    if(!selected.size) return [];
+
+    const pcs=selectedPCs();
+
+    const bass=Math.min(...selected)%12;
+
+    const out=[];
+
+    ALL.forEach(chord=>{
+
+        if(equalSets(chord.pcs,pcs)){
+
+            let label=chord.name;
+
+            if(bass!==chord.root){
+
+                label += "/" + NOTE_NAMES[bass];
+            }
+
+            out.push(label);
+        }
+    });
+
+    return [...new Set(out)].sort();
+}
+
+function bestMatch(){
+
+    const pcs=selectedPCs();
+
+    let best=null;
+    let score=-999999;
+
+    ALL.forEach(chord=>{
+
+        let common=0;
+        let missing=0;
+        let extra=0;
+
+        pcs.forEach(p=>{
+            if(chord.pcs.has(p)) common++;
+            else missing++;
+        });
+
+        chord.pcs.forEach(p=>{
+            if(!pcs.has(p)) extra++;
+        });
+
+        const s=
+            common*10-
+            missing*4-
+            extra*4;
+
+        if(s>score){
+            score=s;
+            best=chord.name;
+        }
+
+    });
+
+    return best;
+}
+
+function nearby(){
+
+    const pcs=selectedPCs();
+
+    const out=[];
+
+    ALL.forEach(chord=>{
+
+        const diff=new Set();
+
+        pcs.forEach(v=>{
+            if(!chord.pcs.has(v)) diff.add(v);
+        });
+
+        chord.pcs.forEach(v=>{
+            if(!pcs.has(v)) diff.add(v);
+        });
+
+        const d=diff.size;
+
+        if(d<=2){
+            out.push([d,chord]);
+        }
+
+    });
+
+    out.sort((a,b)=>
+        a[0]-b[0] ||
+        a[1].name.localeCompare(b[1].name)
+    );
+
+    return out.slice(0,80);
+}
+
+function refresh(){
+
+    const showNames=
+        document.getElementById("showNames").checked;
+
+    noteElements.forEach((div,midi)=>{
+
+        div.classList.toggle(
+            "selected",
+            selected.has(midi)
+        );
+
+        div.querySelector(".note-label")
+            .style.display=
+            showNames ? "flex" : "none";
+    });
+
+    const exact=exactMatches();
+
+    const header=
+        document.getElementById("header");
+
+    if(exact.length){
+
+        header.textContent=
+            exact.join(", ");
+
+    } else if(selected.size){
+
+        header.textContent=
+            "Closest Match: "+
+            bestMatch();
+
+    } else{
+
+        header.textContent=
+            "Select notes";
+    }
+
+    buildNearby();
+}
+
+function loadChord(chord,bass=null){
+
+    selected.clear();
+
+    const rootMidi=52+chord.root;
+
+    const notes=
+        chord.intervals.map(
+            i=>rootMidi+i
+        );
+
+    if(bass!==null){
+
+        let bassNote=
+            rootMidi+(bass-chord.root+12)%12;
+
+        while(
+            bassNote>=Math.min(...notes)
+        ){
+            bassNote-=12;
+        }
+
+        notes.unshift(bassNote);
+    }
+
+    notes.forEach(n=>{
+
+        const pc=n%12;
+
+        let candidate=null;
+        let bestFret=999;
+
+        noteData.forEach(d=>{
+
+            if(d.midi%12===pc){
+
+                if(d.fret<bestFret){
+
+                    bestFret=d.fret;
+                    candidate=d.midi;
+
+                }
+            }
+
+        });
+
+        if(candidate!==null){
+            selected.add(candidate);
+        }
+
+    });
+
+    refresh();
+
+    playCurrentSelection();
+}
+
+function buildNearby(){
+
+    const row=
+        document.getElementById("nearbyRow");
+
+    const row2=
+        document.getElementById("inversionRow");
+
+    row.innerHTML="";
+    row2.innerHTML="";
+
+    nearby().forEach(([d,chord])=>{
+
+        const btn=
+            document.createElement("button");
+
+        btn.className="chord-card";
+
+        btn.innerHTML=
+            `<b>${chord.name}</b><br>${d} away`;
+
+        btn.onclick=()=>loadChord(chord);
+
+        row.appendChild(btn);
+
+    });
+
+    let count=0;
+
+    nearby().forEach(([d,chord])=>{
+
+        [...chord.pcs].sort((a,b)=>a-b)
+        .forEach(pc=>{
+
+            if(pc!==chord.root&&count<120){
+
+                count++;
+
+                const btn=
+                    document.createElement("button");
+
+                btn.className=
+                    "chord-card";
+
+                btn.innerHTML=
+                    `<b>${chord.name}/${NOTE_NAMES[pc]}</b>`;
+
+                btn.onclick=()=>
+                    loadChord(chord,pc);
+
+                row2.appendChild(btn);
+            }
+        });
+    });
+}
+
+const audioCtx=
+    new (window.AudioContext||
+    window.webkitAudioContext)();
+
+function midiToFreq(m){
+
+    return 440*
+    Math.pow(
+        2,
+        (m-69)/12
+    );
+}
+
+function playCurrentSelection(){
+
+    if(!selected.size) return;
+
+    const now=
+        audioCtx.currentTime;
+
+    [...selected].forEach(midi=>{
+
+        const osc=
+            audioCtx.createOscillator();
+
+        const gain=
+            audioCtx.createGain();
+
+        osc.type=
+            "triangle";
+
+        osc.frequency.value=
+            midiToFreq(midi);
+
+        gain.gain.setValueAtTime(
+            0.15,
+            now
+        );
+
+        gain.gain.exponentialRampToValueAtTime(
+            0.0001,
+            now+1.2
+        );
+
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        osc.start(now);
+        osc.stop(now+1.2);
+
+    });
+}
+
+document
+.getElementById("clearBtn")
+.addEventListener("click",()=>{
+
+    selected.clear();
+
+    refresh();
+
+});
+
+document
+.getElementById("showNames")
+.addEventListener("change",
+refresh);
+
+buildFretboard();
+refresh();
+
+</script>
+
+</body>
+</html>
