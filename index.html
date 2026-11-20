@@ -2,455 +2,897 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport"
+      content="width=device-width,initial-scale=1">
+
 <title>Guitar Chord Helper</title>
 
 <style>
+
 :root{
-    --bg:#1e1e1e;
-    --panel:#2b2b2b;
-    --panel2:#333;
-    --text:#fff;
-    --accent:#3fa9ff;
-    --border:#555;
+ --bg:#1e1e1e;
+ --panel:#2b2b2b;
+ --panel2:#383838;
+ --text:#ffffff;
+ --accent:#38a2ff;
+ --border:#555;
 }
 
 *{
-    box-sizing:border-box;
+ box-sizing:border-box;
 }
 
 body{
-    margin:0;
-    font-family:Segoe UI,sans-serif;
-    background:var(--bg);
-    color:var(--text);
+ margin:0;
+ background:var(--bg);
+ color:var(--text);
+ font-family:Segoe UI,sans-serif;
 }
 
 header{
-    padding:15px;
-    font-size:24px;
-    font-weight:bold;
-    border-bottom:1px solid var(--border);
+ padding:14px;
+ font-size:24px;
+ font-weight:bold;
+ border-bottom:1px solid var(--border);
 }
 
 .controls{
-    display:flex;
-    gap:20px;
-    align-items:center;
-    padding:10px 15px;
-    flex-wrap:wrap;
+ display:flex;
+ gap:10px;
+ flex-wrap:wrap;
+ align-items:center;
+ padding:10px;
 }
 
 button{
-    cursor:pointer;
+ cursor:pointer;
+ border:1px solid #666;
+ background:#444;
+ color:white;
+ padding:8px 12px;
+ border-radius:6px;
+}
+
+button:hover{
+ background:#555;
 }
 
 #fretboard-container{
-    overflow:auto;
-    padding:10px;
+ overflow:auto;
+ padding:10px;
 }
 
 #fretboard{
-    position:relative;
-    width:1500px;
-    height:340px;
-    background:#b07a44;
-    border:8px solid #75502d;
-    border-radius:12px;
-    margin:auto;
-    user-select:none;
+ position:relative;
+ width:1800px;
+ height:340px;
+ margin:auto;
+ background:#b07a44;
+ border:8px solid #75502d;
+ border-radius:12px;
 }
 
 .string{
-    position:absolute;
-    left:0;
-    right:0;
-    height:2px;
-    background:#ddd;
+ position:absolute;
+ left:0;
+ right:0;
+ height:2px;
+ background:#ddd;
 }
 
 .fret{
-    position:absolute;
-    top:0;
-    bottom:0;
-    width:3px;
-    background:#ddd;
+ position:absolute;
+ top:0;
+ bottom:0;
+ width:3px;
+ background:#ddd;
 }
 
-.fret-marker{
-    position:absolute;
-    width:18px;
-    height:18px;
-    background:rgba(255,255,255,.25);
-    border-radius:50%;
+.marker{
+ position:absolute;
+ width:18px;
+ height:18px;
+ border-radius:50%;
+ background:rgba(255,255,255,.25);
 }
 
 .note-cell{
-    position:absolute;
-    width:46px;
-    height:40px;
-    transform:translate(-50%,-50%);
-    border-radius:50%;
-    cursor:pointer;
-    transition:.1s;
-}
-
-.note-cell:hover{
-    box-shadow:0 0 0 2px rgba(255,255,255,.5);
+ position:absolute;
+ width:44px;
+ height:44px;
+ transform:translate(-50%,-50%);
+ border-radius:50%;
+ cursor:pointer;
 }
 
 .note-cell.selected{
-    background:var(--accent);
-    border:3px solid white;
+ background:var(--accent);
+ border:3px solid white;
 }
 
 .note-label{
-    position:absolute;
-    inset:0;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    pointer-events:none;
-    font-size:13px;
-    font-weight:bold;
+ position:absolute;
+ inset:0;
+ display:flex;
+ justify-content:center;
+ align-items:center;
+ pointer-events:none;
+ font-size:12px;
+ font-weight:bold;
 }
 
 .section{
-    padding:10px;
+ padding:10px;
 }
 
 .section h2{
-    margin:0 0 8px 0;
-    font-size:18px;
+ margin:0 0 8px;
 }
 
 .scroll-row{
-    overflow-x:auto;
-    white-space:nowrap;
-    border:1px solid var(--border);
-    background:var(--panel);
-    padding:6px;
-    border-radius:8px;
+ overflow-x:auto;
+ white-space:nowrap;
+ border:1px solid var(--border);
+ background:var(--panel);
+ padding:8px;
+ border-radius:8px;
 }
 
 .chord-card{
-    display:inline-block;
-    margin-right:6px;
-    min-width:110px;
-    padding:8px;
-    background:var(--panel2);
-    color:white;
-    border:1px solid #666;
-    border-radius:6px;
-}
-
-.chord-card:hover{
-    background:#4a4a4a;
+ display:inline-block;
+ margin-right:8px;
+ min-width:130px;
+ padding:8px;
+ background:var(--panel2);
+ border:1px solid #666;
+ border-radius:6px;
+ color:white;
 }
 
 .footer{
-    padding:15px;
-    color:#aaa;
-    font-size:13px;
+ padding:15px;
+ color:#aaa;
 }
 
-@media(max-width:700px){
-    header{
-        font-size:18px;
-    }
-}
 </style>
 </head>
 <body>
 
 <header id="header">
-Select notes
+Select Notes
 </header>
 
 <div class="controls">
-    <button id="clearBtn">Clear Selection</button>
 
-    <label>
-        <input type="checkbox" id="showNames" checked>
-        Show Note Names
-    </label>
+<button id="clearBtn">
+Clear Selection
+</button>
+
+<button id="voicingDown">
+◀ Lower Voicing
+</button>
+
+<button id="voicingUp">
+Higher Voicing ▶
+</button>
+
+<label>
+<input
+ type="checkbox"
+ id="showNames"
+ checked>
+ Show Note Names
+</label>
+
 </div>
 
 <div id="fretboard-container">
-    <div id="fretboard"></div>
+<div id="fretboard"></div>
 </div>
 
 <div class="section">
-    <h2>Nearby Chords</h2>
-    <div id="nearbyRow" class="scroll-row"></div>
+
+<h2>Nearby Chords</h2>
+
+<div
+ id="nearbyRow"
+ class="scroll-row">
 </div>
 
+</div>
+<!--
 <div class="section">
-    <h2>Nearby Inverted Chords</h2>
-    <div id="inversionRow" class="scroll-row"></div>
+
+<h2>Chord Voicings</h2>
+
+<div
+ id="voicingRow"
+ class="scroll-row">
+</div>
+
 </div>
 
 <div class="footer">
 Standalone Guitar Chord Helper
 </div>
-
+-->
 <script>
-
 const NOTE_NAMES=[
-"C","C#","D","D#","E","F",
-"F#","G","G#","A","A#","B"
+    "C","C#","D","D#","E","F",
+    "F#","G","G#","A","A#","B"
 ];
 
 const OPEN_STRINGS=[
-40,
-45,
-50,
-55,
-59,
-64
+    40, // E2
+    45, // A2
+    50, // D3
+    55, // G3
+    59, // B3
+    64  // E4
 ];
 
+const FRETS=22;
+
+/* ----------------------------
+   CHORD FORMULAS
+----------------------------- */
+
 const CHORD_TYPES={
-"": [0,4,7],
-"m":[0,3,7],
-"dim":[0,3,6],
-"aug":[0,4,8],
-"sus2":[0,2,7],
-"sus4":[0,5,7],
-"6":[0,4,7,9],
-"m6":[0,3,7,9],
-"7":[0,4,7,10],
-"maj7":[0,4,7,11],
-"m7":[0,3,7,10],
-"m7b5":[0,3,6,10],
-"dim7":[0,3,6,9],
-"add9":[0,2,4,7],
-"madd9":[0,2,3,7],
-"9":[0,4,7,10,14],
-"maj9":[0,4,7,11,14],
-"m9":[0,3,7,10,14],
-"11":[0,4,7,10,14,17],
-"13":[0,4,7,10,14,21]
+
+    "":[0,4,7],
+
+    "m":[0,3,7],
+
+ /*   "dim":[0,3,6],
+
+    "aug":[0,4,8],
+
+    "sus2":[0,2,7],
+
+    "sus4":[0,5,7],
+
+    "6":[0,4,7,9],
+
+    "m6":[0,3,7,9], 
+
+    "7":[0,4,7,10],
+
+    "maj7":[0,4,7,11],
+
+    "m7":[0,3,7,10],
+
+    "m7b5":[0,3,6,10],
+
+    "dim7":[0,3,6,9],
+
+    "add9":[0,2,4,7],
+
+    "madd9":[0,2,3,7],
+
+    "9":[0,4,7,10,14],
+
+    "maj9":[0,4,7,11,14],
+
+    "m9":[0,3,7,10,14],
+
+    "11":[0,4,7,10,14,17],
+
+    "13":[0,4,7,10,14,21] */
 };
 
-const ALL=[];
+/* ----------------------------
+   CHORD LIBRARY
+----------------------------- */
+
+const CHORD_LIBRARY=[];
 
 for(let root=0;root<12;root++){
 
-    for(const [suffix,intervals] of Object.entries(CHORD_TYPES)){
+    for(const [quality,intervals]
+        of Object.entries(CHORD_TYPES)){
 
-        ALL.push({
+        CHORD_LIBRARY.push({
+
             root,
+
+            quality,
+
             intervals,
-            name:NOTE_NAMES[root]+suffix,
-            pcs:new Set(intervals.map(i=>(root+i)%12))
+
+            name:
+                NOTE_NAMES[root]
+                +quality,
+
+            pcs:new Set(
+                intervals.map(
+                    i=>(root+i)%12
+                )
+            )
+
         });
 
     }
 }
 
-const fretboard=document.getElementById("fretboard");
+/* ----------------------------
+   REAL GUITAR VOICINGS
+----------------------------- */
 
-const selected=new Set();
+const BASE_VOICINGS={
 
-const noteElements=new Map();
-const noteData=new Map();
+"C":[
+[-1,3,2,0,1,0],
+[-1,3,5,5,5,3],
+[8,10,10,9,8,8]
+],
 
-const FRETS=15;
-const width=1500;
-const height=340;
+"Cm":[
+[-1,3,1,0,1,-1],
+[-1,3,5,5,4,3],
+[8,10,10,8,8,8]
+],
 
-function buildFretboard(){
+"D":[
+[-1,-1,0,2,3,2],
+[-1,5,7,7,7,5],
+[10,12,12,11,10,10]
+],
 
-    fretboard.innerHTML="";
+"Dm":[
+[-1,-1,0,2,3,1],
+[-1,5,7,7,6,5],
+[10,12,12,10,10,10]
+],
 
-    for(let s=0;s<6;s++){
+"E":[
+[0,2,2,1,0,0],
+[0,7,9,9,9,7],
+[12,14,14,13,12,12]
+],
 
-        const y=40+s*52;
+"Em":[
+[0,2,2,0,0,0],
+[0,7,9,9,8,7],
+[12,14,14,12,12,12]
+],
 
-        const string=document.createElement("div");
+"F":[
+[1,3,3,2,1,1],
+[8,8,10,10,10,8]
+],
 
-        string.className="string";
+"Fm":[
+[1,3,3,1,1,1],
+[8,10,10,8,8,8]
+],
 
-        string.style.top=y+"px";
+"G":[
+[3,2,0,0,0,3],
+[3,5,5,4,3,3],
+[10,10,12,12,12,10]
+],
 
-        fretboard.appendChild(string);
-    }
+"Gm":[
+[3,5,5,3,3,3],
+[10,12,12,10,10,10]
+],
 
-    const fretSpacing=(width-80)/(FRETS+1);
+"A":[
+[-1,0,2,2,2,0],
+[5,7,7,6,5,5],
+[12,12,14,14,14,12]
+],
 
-    for(let f=0;f<=FRETS;f++){
+"Am":[
+[-1,0,2,2,1,0],
+[5,7,7,5,5,5],
+[12,14,14,12,13,12]
+],
 
-        const x=40+f*fretSpacing;
+"B":[
+[-1,2,4,4,4,2],
+[7,9,9,8,7,7]
+],
 
-        const div=document.createElement("div");
+"Bm":[
+[-1,2,4,4,3,2],
+[7,9,9,7,7,7]
+]
 
-        div.className="fret";
+};
 
-        div.style.left=x+"px";
+/* ----------------------------
+   GENERATE ALL ROOTS
+----------------------------- */
 
-        fretboard.appendChild(div);
-    }
+function transposeVoicing(
+    voicing,
+    semitones
+){
 
-    [3,5,7,9,15].forEach(f=>{
+    return voicing.map(f=>{
 
-        const marker=document.createElement("div");
+        if(f<0) return -1;
 
-        marker.className="fret-marker";
-
-        marker.style.left=(40+(f-.5)*fretSpacing-9)+"px";
-        marker.style.top="160px";
-
-        fretboard.appendChild(marker);
+        return f+semitones;
 
     });
 
-    const double=document.createElement("div");
-    double.className="fret-marker";
-    double.style.left=(40+(12-.5)*fretSpacing-9)+"px";
-    double.style.top="110px";
+}
 
-    fretboard.appendChild(double);
+function rootIndex(name){
 
-    const double2=document.createElement("div");
-    double2.className="fret-marker";
-    double2.style.left=(40+(12-.5)*fretSpacing-9)+"px";
-    double2.style.top="210px";
+    return NOTE_NAMES.indexOf(name);
 
-    fretboard.appendChild(double2);
+}
 
-    for(let string=0;string<6;string++){
+function makeChordKey(rootPc,
+                      quality){
 
-        const y=40+string*52;
+    return NOTE_NAMES[rootPc]
+           +quality;
 
-        for(let fret=0;fret<=FRETS;fret++){
+}
 
-            const x=40+fret*fretSpacing-fretSpacing/2;
+/* ----------------------------
+   MASTER VOICING MAP
+----------------------------- */
 
-            const midi=OPEN_STRINGS[5-string]+fret;
+const VOICINGS={};
 
-            const key=`${string}-${fret}`;
+Object.entries(BASE_VOICINGS)
+.forEach(([name,list])=>{
 
-            const div=document.createElement("div");
+    const match=
+        name.match(
+            /^([A-G]#?)(.*)$/
+        );
 
-            div.className="note-cell";
+    if(!match) return;
 
-            div.style.left=x+"px";
+    const rootName=
+        match[1];
 
-            div.style.top=y+"px";
+    const quality=
+        match[2];
 
-            const label=document.createElement("div");
+    const rootPc=
+        rootIndex(rootName);
 
-            label.className="note-label";
+    for(let target=0;
+        target<12;
+        target++){
+
+        const diff=
+            target-rootPc;
+
+        const key=
+            makeChordKey(
+                target,
+                quality
+            );
+
+        if(!VOICINGS[key])
+            VOICINGS[key]=[];
+
+        list.forEach(v=>{
+
+            const newShape=
+                transposeVoicing(
+                    v,
+                    diff
+                );
+
+            const valid=
+                newShape.every(f=>
+                    f<0 ||
+                    f<=22
+                );
+
+            if(valid){
+
+                VOICINGS[key]
+                .push(newShape);
+
+            }
+
+        });
+
+    }
+
+});
+
+/* ----------------------------
+   APP STATE
+----------------------------- */
+
+const selectedPositions=
+    new Set();
+
+const noteData=
+    new Map();
+
+const noteElements=
+    new Map();
+
+let currentChord=null;
+
+let currentVoicingIndex=0;
+
+let currentVoicingList=[];
+
+let currentBass=null;
+/* =====================================================
+   FRETBOARD CONSTRUCTION
+===================================================== */
+
+const fretboard =
+    document.getElementById(
+        "fretboard"
+    );
+
+function buildFretboard(){
+
+    const width = 1800;
+
+    const fretSpacing =
+        (width - 80) /
+        (FRETS + 1);
+
+    /* strings */
+
+    for(let string=0;
+        string<6;
+        string++){
+
+        const y =
+            40 +
+            string*52;
+
+        const div =
+            document.createElement(
+                "div"
+            );
+
+        div.className =
+            "string";
+
+        div.style.top =
+            y+"px";
+
+        fretboard.appendChild(
+            div
+        );
+    }
+
+    /* frets */
+
+    for(let fret=0;
+        fret<=FRETS;
+        fret++){
+
+        const x =
+            40 +
+            fret *
+            fretSpacing;
+
+        const div =
+            document.createElement(
+                "div"
+            );
+
+        div.className =
+            "fret";
+
+        div.style.left =
+            x+"px";
+
+        fretboard.appendChild(
+            div
+        );
+    }
+
+    /* markers */
+
+    [
+        3,5,7,9,
+        15,17,19,21
+    ]
+    .forEach(f=>{
+
+        const m =
+            document.createElement(
+                "div"
+            );
+
+        m.className =
+            "marker";
+
+        m.style.left =
+            (
+                40 +
+                (f-.5)
+                *
+                fretSpacing
+                - 9
+            ) + "px";
+
+        m.style.top =
+            "160px";
+
+        fretboard.appendChild(
+            m
+        );
+    });
+
+    /* octave */
+
+    [110,210]
+    .forEach(y=>{
+
+        const m =
+            document.createElement(
+                "div"
+            );
+
+        m.className =
+            "marker";
+
+        m.style.left =
+            (
+             40 +
+             (12-.5)
+             *
+             fretSpacing
+             - 9
+            ) + "px";
+
+        m.style.top =
+            y + "px";
+
+        fretboard.appendChild(m);
+
+    });
+
+    /* notes */
+
+    for(let string=0;
+        string<6;
+        string++){
+
+        const y =
+            40 +
+            string*52;
+
+        for(let fret=0;
+            fret<=FRETS;
+            fret++){
+
+            const x =
+                40 +
+                fret*fretSpacing
+                -
+                fretSpacing/2;
+
+            const midi =
+                OPEN_STRINGS
+                [
+                 5-string
+                ]
+                +
+                fret;
+
+            const pc =
+                midi % 12;
+
+            const key =
+                string
+                +
+                "-"
+                +
+                fret;
+
+            const note=
+                document.createElement(
+                    "div"
+                );
+
+            note.className =
+                "note-cell";
+
+            note.style.left =
+                x+"px";
+
+            note.style.top =
+                y+"px";
+
+            const label=
+                document.createElement(
+                    "div"
+                );
+
+            label.className=
+                "note-label";
 
             label.textContent=
-                NOTE_NAMES[midi%12];
+                NOTE_NAMES[pc];
 
-            div.appendChild(label);
+            note.appendChild(
+                label
+            );
 
-            div.addEventListener("click",()=>{
+            note.addEventListener(
+                "click",
+                ()=>{
 
-                if(selected.has(midi)){
-                    selected.delete(midi);
+                    if(
+                        selectedPositions
+                        .has(key)
+                    ){
+
+                        selectedPositions
+                        .delete(key);
+
+                    }else{
+
+                        selectedPositions
+                        .add(key);
+
+                    }
+
+                    refresh();
+
                 }
-                else{
-                    selected.add(midi);
+            );
+
+            noteData.set(
+                key,
+                {
+                    key,
+                    string,
+                    fret,
+                    midi,
+                    pc
                 }
+            );
 
-                refresh();
+            noteElements.set(
+                key,
+                note
+            );
 
-                playCurrentSelection();
-            });
+            fretboard.appendChild(
+                note
+            );
 
-            fretboard.appendChild(div);
-
-            noteElements.set(midi,div);
-
-            noteData.set(midi,{
-                midi,
-                string,
-                fret
-            });
         }
     }
 }
 
-function selectedPCs(){
+/* =====================================================
+   HELPERS
+===================================================== */
+
+function selectedPitchClasses(){
 
     return new Set(
-        [...selected].map(n=>n%12)
+
+        [...selectedPositions]
+        .map(k=>
+            noteData
+            .get(k)
+            .pc
+        )
+
     );
 }
 
-function equalSets(a,b){
+function selectedMidiNotes(){
 
-    if(a.size!==b.size)return false;
+    return
 
-    for(const v of a){
-        if(!b.has(v)) return false;
+    [...selectedPositions]
+    .map(k=>
+        noteData
+        .get(k)
+        .midi
+    );
+}
+
+function setsEqual(a,b){
+
+    if(a.size!==b.size)
+        return false;
+
+    for(const x of a){
+
+        if(!b.has(x))
+            return false;
+
     }
 
     return true;
 }
 
-function exactMatches(){
+/* =====================================================
+   CHORD MATCHING
+===================================================== */
 
-    if(!selected.size) return [];
+function chordMatchScore(
+    chord,
+    selectedPcs
+){
 
-    const pcs=selectedPCs();
+    let common=0;
+    let missing=0;
+    let extra=0;
 
-    const bass=Math.min(...selected)%12;
+    selectedPcs.forEach(pc=>{
 
-    const out=[];
+        if(
+            chord.pcs.has(pc)
+        ){
 
-    ALL.forEach(chord=>{
+            common++;
 
-        if(equalSets(chord.pcs,pcs)){
+        }else{
 
-            let label=chord.name;
+            extra++;
 
-            if(bass!==chord.root){
-
-                label += "/" + NOTE_NAMES[bass];
-            }
-
-            out.push(label);
         }
+
     });
 
-    return [...new Set(out)].sort();
+    chord.pcs.forEach(pc=>{
+
+        if(
+          !selectedPcs
+          .has(pc)
+        ){
+
+            missing++;
+
+        }
+
+    });
+
+    return (
+
+        common*12
+
+        -
+
+        missing*3
+
+        -
+
+        extra*4
+
+    );
 }
 
-function bestMatch(){
+function bestChordMatch(){
 
-    const pcs=selectedPCs();
+    const pcs =
+        selectedPitchClasses();
 
     let best=null;
-    let score=-999999;
+    let score=-99999;
 
-    ALL.forEach(chord=>{
-
-        let common=0;
-        let missing=0;
-        let extra=0;
-
-        pcs.forEach(p=>{
-            if(chord.pcs.has(p)) common++;
-            else missing++;
-        });
-
-        chord.pcs.forEach(p=>{
-            if(!pcs.has(p)) extra++;
-        });
+    CHORD_LIBRARY
+    .forEach(chord=>{
 
         const s=
-            common*10-
-            missing*4-
-            extra*4;
+            chordMatchScore(
+                chord,
+                pcs
+            );
 
         if(s>score){
+
             score=s;
-            best=chord.name;
+            best=chord;
+
         }
 
     });
@@ -458,267 +900,649 @@ function bestMatch(){
     return best;
 }
 
-function nearby(){
+function exactChordMatches(){
 
-    const pcs=selectedPCs();
+    const pcs =
+        selectedPitchClasses();
 
-    const out=[];
-
-    ALL.forEach(chord=>{
-
-        const diff=new Set();
-
-        pcs.forEach(v=>{
-            if(!chord.pcs.has(v)) diff.add(v);
-        });
-
-        chord.pcs.forEach(v=>{
-            if(!pcs.has(v)) diff.add(v);
-        });
-
-        const d=diff.size;
-
-        if(d<=2){
-            out.push([d,chord]);
-        }
-
-    });
-
-    out.sort((a,b)=>
-        a[0]-b[0] ||
-        a[1].name.localeCompare(b[1].name)
+    return CHORD_LIBRARY
+    .filter(
+        chord=>
+        setsEqual(
+            pcs,
+            chord.pcs
+        )
     );
-
-    return out.slice(0,80);
 }
+
+/* =====================================================
+   UI REFRESH
+===================================================== */
 
 function refresh(){
 
-    const showNames=
-        document.getElementById("showNames").checked;
+    const showNames =
+        document
+        .getElementById(
+            "showNames"
+        )
+        .checked;
 
-    noteElements.forEach((div,midi)=>{
+    noteElements
+    .forEach(
+        (div,key)=>{
 
-        div.classList.toggle(
-            "selected",
-            selected.has(midi)
-        );
+            div.classList
+            .toggle(
 
-        div.querySelector(".note-label")
+                "selected",
+
+                selectedPositions
+                .has(key)
+
+            );
+
+            div
+            .querySelector(
+                ".note-label"
+            )
             .style.display=
-            showNames ? "flex" : "none";
-    });
 
-    const exact=exactMatches();
+                showNames
+
+                ? "flex"
+
+                : "none";
+
+        }
+    );
+
+    const exact =
+        exactChordMatches();
 
     const header=
-        document.getElementById("header");
+        document
+        .getElementById(
+            "header"
+        );
 
     if(exact.length){
 
-        header.textContent=
-            exact.join(", ");
+        header.textContent =
+            exact
+            .map(
+                c=>c.name
+            )
+            .join(", ");
 
-    } else if(selected.size){
+    }else if(
+        selectedPositions.size
+    ){
 
-        header.textContent=
-            "Closest Match: "+
-            bestMatch();
+        const best =
+            bestChordMatch();
 
-    } else{
+        header.textContent =
 
-        header.textContent=
-            "Select notes";
+            "Closest Match: "
+
+            +
+
+            best.name;
+
+    }else{
+
+        header.textContent =
+            "Select Notes";
+
     }
 
-    buildNearby();
+    buildNearbyChords();
 }
+/* =====================================================
+   NEARBY CHORD GENERATION
+===================================================== */
 
-function loadChord(chord,bass=null){
+function buildNearbyChords(){
 
-    selected.clear();
-
-    const rootMidi=52+chord.root;
-
-    const notes=
-        chord.intervals.map(
-            i=>rootMidi+i
+    const row =
+        document.getElementById(
+            "nearbyRow"
         );
 
-    if(bass!==null){
+    row.innerHTML = "";
 
-        let bassNote=
-            rootMidi+(bass-chord.root+12)%12;
+    if(
+        !selectedPositions.size
+    )
+        return;
 
-        while(
-            bassNote>=Math.min(...notes)
-        ){
-            bassNote-=12;
-        }
+    const pcs =
+        selectedPitchClasses();
 
-        notes.unshift(bassNote);
-    }
+    const ranked =
+        CHORD_LIBRARY
+        .map(chord=>{
 
-    notes.forEach(n=>{
+            return {
 
-        const pc=n%12;
+                chord,
 
-        let candidate=null;
-        let bestFret=999;
+                score:
+                    chordMatchScore(
+                        chord,
+                        pcs
+                    )
 
-        noteData.forEach(d=>{
+            };
 
-            if(d.midi%12===pc){
+        })
+        .sort(
+            (a,b)=>
+            b.score-a.score
+        )
+        .slice(0,50);
 
-                if(d.fret<bestFret){
+    ranked.forEach(item=>{
 
-                    bestFret=d.fret;
-                    candidate=d.midi;
+        const btn =
+            document.createElement(
+                "button"
+            );
 
-                }
-            }
+        btn.className =
+            "chord-card";
 
-        });
+        btn.innerHTML =
 
-        if(candidate!==null){
-            selected.add(candidate);
-        }
+            "<b>"
+
+            +
+
+            item.chord.name
+
+            +
+
+            "</b><br>"
+
+            +
+
+            item.score;
+
+        btn.onclick = () => {
+
+            loadChord(
+                item.chord
+            );
+
+        };
+
+        row.appendChild(
+            btn
+        );
 
     });
+
+}
+
+/* =====================================================
+   CHORD TO VOICING LOOKUP
+===================================================== */
+
+function findVoicings(
+    chord
+){
+
+    let key =
+        NOTE_NAMES[
+            chord.root
+        ]
+        +
+        chord.quality;
+
+    return (
+        VOICINGS[key]
+        ||
+        []
+    );
+
+}
+
+/* =====================================================
+   LOAD SPECIFIC VOICING
+===================================================== */
+
+function loadVoicing(
+    voicing
+){
+
+    selectedPositions
+    .clear();
+
+    voicing.forEach(
+        (fret,string)=>{
+
+            if(
+                fret<0
+            ) return;
+
+            const key =
+
+                (5-string)
+
+                +
+
+                "-"
+
+                +
+
+                fret;
+
+            if(
+                noteData.has(
+                    key
+                )
+            ){
+
+                selectedPositions
+                .add(key);
+
+            }
+
+        }
+    );
 
     refresh();
+    playSelection();
 
-    playCurrentSelection();
 }
 
-function buildNearby(){
+/* =====================================================
+   LOAD CHORD
+===================================================== */
 
-    const row=
-        document.getElementById("nearbyRow");
+function loadChord(
+    chord
+){
 
-    const row2=
-        document.getElementById("inversionRow");
+    currentChord =
+        chord;
 
-    row.innerHTML="";
-    row2.innerHTML="";
+    currentVoicingList =
+        findVoicings(
+            chord
+        );
 
-    nearby().forEach(([d,chord])=>{
+    currentVoicingIndex =
+        0;
 
-        const btn=
-            document.createElement("button");
+    if(
+        currentVoicingList.length
+    ){
 
-        btn.className="chord-card";
+        loadVoicing(
 
-        btn.innerHTML=
-            `<b>${chord.name}</b><br>${d} away`;
+            currentVoicingList[
+                0
+            ]
 
-        btn.onclick=()=>loadChord(chord);
+        );
 
-        row.appendChild(btn);
+    }
 
-    });
-
-    let count=0;
-
-    nearby().forEach(([d,chord])=>{
-
-        [...chord.pcs].sort((a,b)=>a-b)
-        .forEach(pc=>{
-
-            if(pc!==chord.root&&count<120){
-
-                count++;
-
-                const btn=
-                    document.createElement("button");
-
-                btn.className=
-                    "chord-card";
-
-                btn.innerHTML=
-                    `<b>${chord.name}/${NOTE_NAMES[pc]}</b>`;
-
-                btn.onclick=()=>
-                    loadChord(chord,pc);
-
-                row2.appendChild(btn);
-            }
-        });
-    });
+    buildVoicingRow();
 }
 
-const audioCtx=
-    new (window.AudioContext||
-    window.webkitAudioContext)();
+/* =====================================================
+   VOICING DISPLAY
+===================================================== */
 
-function midiToFreq(m){
+function buildVoicingRow(){
 
-    return 440*
-    Math.pow(
-        2,
-        (m-69)/12
+    const row =
+        document.getElementById(
+            "voicingRow"
+        );
+
+    row.innerHTML = "";
+
+    if(
+        !currentVoicingList
+        .length
+    )
+        return;
+
+    currentVoicingList
+    .forEach(
+        (
+            voicing,
+            index
+        )=>{
+
+            const btn =
+                document
+                .createElement(
+                    "button"
+                );
+
+            btn.className =
+                "chord-card";
+
+            btn.innerHTML =
+
+                "<b>"
+
+                +
+
+                (index+1)
+
+                +
+
+                "</b><br>"
+
+                +
+
+                voicing
+                .map(v=>
+
+                    v<0
+                    ?"x"
+                    :v
+
+                )
+                .join(" ");
+
+            btn.onclick =
+                ()=>{
+
+                    currentVoicingIndex =
+                        index;
+
+                    loadVoicing(
+                        voicing
+                    );
+
+                };
+
+            row.appendChild(
+                btn
+            );
+
+        }
     );
+
 }
 
-function playCurrentSelection(){
+/* =====================================================
+   NEXT VOICING
+===================================================== */
 
-    if(!selected.size) return;
+function voicingUp(){
 
-    const now=
-        audioCtx.currentTime;
+    if(
+        !currentVoicingList
+        .length
+    )
+        return;
 
-    [...selected].forEach(midi=>{
+    if(
 
-        const osc=
-            audioCtx.createOscillator();
+        currentVoicingIndex
 
-        const gain=
-            audioCtx.createGain();
+        <
 
-        osc.type=
+        currentVoicingList
+        .length
+
+        -1
+
+    ){
+
+        currentVoicingIndex++;
+
+        loadVoicing(
+
+            currentVoicingList
+            [
+             currentVoicingIndex
+            ]
+
+        );
+
+    }
+
+}
+
+/* =====================================================
+   PREVIOUS VOICING
+===================================================== */
+
+function voicingDown(){
+
+    if(
+        !currentVoicingList
+        .length
+    )
+        return;
+
+    if(
+        currentVoicingIndex
+        >0
+    ){
+
+        currentVoicingIndex--;
+
+        loadVoicing(
+
+            currentVoicingList
+            [
+             currentVoicingIndex
+            ]
+
+        );
+
+    }
+
+}
+
+/* =====================================================
+   AUDIO
+===================================================== */
+
+const audioCtx =
+
+new (
+    window.AudioContext
+    ||
+    window.webkitAudioContext
+)();
+
+function midiToFreq(
+    midi
+){
+
+    return (
+
+        440
+
+        *
+
+        Math.pow(
+            2,
+
+            (
+             midi-69
+            )/12
+
+        )
+
+    );
+
+}
+
+function playSelection(){
+
+    if(
+        !selectedPositions
+        .size
+    )
+        return;
+
+    const now =
+        audioCtx
+        .currentTime;
+
+    selectedPositions
+    .forEach(key=>{
+
+        const midi =
+
+            noteData
+            .get(key)
+            .midi;
+
+        const osc =
+            audioCtx
+            .createOscillator();
+
+        const gain =
+            audioCtx
+            .createGain();
+
+        osc.type =
             "triangle";
 
-        osc.frequency.value=
-            midiToFreq(midi);
+        osc.frequency.value =
 
-        gain.gain.setValueAtTime(
-            0.15,
+            midiToFreq(
+                midi
+            );
+
+        gain.gain
+        .setValueAtTime(
+            .12,
             now
         );
 
-        gain.gain.exponentialRampToValueAtTime(
-            0.0001,
-            now+1.2
+        gain.gain
+        .exponentialRampToValueAtTime(
+            .0001,
+            now+1.3
         );
 
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
+        osc.connect(
+            gain
+        );
+
+        gain.connect(
+            audioCtx
+            .destination
+        );
 
         osc.start(now);
-        osc.stop(now+1.2);
+
+        osc.stop(
+            now+1.3
+        );
 
     });
+
 }
 
-document
-.getElementById("clearBtn")
-.addEventListener("click",()=>{
-
-    selected.clear();
-
-    refresh();
-
-});
+/* =====================================================
+   CONTROLS
+===================================================== */
 
 document
-.getElementById("showNames")
-.addEventListener("change",
-refresh);
+.getElementById(
+    "clearBtn"
+)
+.addEventListener(
+    "click",
+    ()=>{
+
+        selectedPositions
+        .clear();
+
+        currentChord =
+            null;
+
+        currentVoicingList
+            =[];
+
+        refresh();
+
+        document
+        .getElementById(
+            "voicingRow"
+        )
+        .innerHTML =
+            "";
+
+    }
+);
+
+document
+.getElementById(
+    "showNames"
+)
+.addEventListener(
+    "change",
+    refresh
+);
+
+document
+.getElementById(
+    "voicingUp"
+)
+.addEventListener(
+    "click",
+    voicingUp
+);
+
+document
+.getElementById(
+    "voicingDown"
+)
+.addEventListener(
+    "click",
+    voicingDown
+);
+
+/* keyboard */
+
+document
+.addEventListener(
+    "keydown",
+    e=>{
+
+        if(
+            e.key==="ArrowRight"
+        ){
+
+            voicingUp();
+
+        }
+
+        if(
+            e.key==="ArrowLeft"
+        ){
+
+            voicingDown();
+
+        }
+
+    }
+);
+
+/* =====================================================
+   STARTUP
+===================================================== */
 
 buildFretboard();
+
 refresh();
 
 </script>
-
 </body>
 </html>
